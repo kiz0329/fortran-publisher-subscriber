@@ -1,0 +1,11 @@
+ConfigArgParse==1.7.5
+findent==4.3.6
+fortls==3.2.2
+fprettify==0.3.7
+fypp==3.2
+gitdb==4.0.12
+GitPython==3.1.41
+json5==0.14.0
+packaging==26.0
+setuptools==78.1.1
+smmap==5.0.3

@@ -1,0 +1,46 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/python
+{
+  "name": "Python 3",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/python:3-3.12-trixie",
+  "features": {
+    "ghcr.io/devcontainers-community/npm-features/prettier:1": {},
+    "ghcr.io/ttyrho/devcontainer-features/fpm:1": {},
+    "ghcr.io/ttyrho/devcontainer-features/gfortran:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "fortran-lang.linter-gfortran",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "[FortranFreeForm]": {
+          "files.encoding": "utf8",
+          "editor.defaultFormatter": "fortran-lang.linter-gfortran"
+        },
+        "fortran.linter.compiler": "gfortran",
+        "fortran.linter.modOutput": "${workspaceFolder}/.modernfortran/lintermod",
+        "fortran.linter.extraArgs": ["-Wall", "-Wextra"],
+        "fortran.linter.compilerPath": "",
+        "fortran.fortls.configure": "${workspaceFolder}/.modernfortran/fortls/config.json"
+      }
+    }
+  },
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "pip3 install --user -r requirements.txt"
+
+  // Configure tool-specific properties.
+  // "customizations": {},
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+}

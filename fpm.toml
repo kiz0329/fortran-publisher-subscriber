@@ -1,0 +1,9 @@
+name = "package-name"
+version = "0.1.0"
+license = "license-type"
+author = "author-name"
+maintainer = "JohnDoe@example.com"
+copyright = ""
+
+[dependencies]
+# stdlib = {git ="https://github.com/fortran-lang/stdlib.git", branch = "stdlib-fpm"}
