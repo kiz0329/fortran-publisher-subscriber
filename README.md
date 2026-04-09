@@ -34,7 +34,6 @@ classDiagram
     }
     class publisher_type {
         +publish(message)
-        +disconnect()
         +get_name() string
         +get_topic() string
     }
@@ -159,7 +158,7 @@ end program main
 
 > **Note:** Subscriber variables passed to `broker%subscribe` and `broker%unsubscribe` must have the `target` attribute, since the broker stores pointers to them internally. The broker variable must also have the `target` attribute, as the publisher stores a pointer to it.
 >
-> **Lifecycle requirement:** Subscribers must remain alive while registered in a broker, and a broker must remain alive while connected publishers still reference it. For explicit teardown, call `broker%clear()` before destroying a broker and `pub%disconnect()` before destroying or reusing a publisher.
+> **Lifecycle requirement:** Subscribers must remain alive while registered in a broker, and a broker must remain alive while connected publishers still reference it. Publishers are automatically disconnected from their broker upon destruction via the finalizer. For explicit broker cleanup (e.g., to notify all subscribers of disconnection), call `broker%clear()` before destroying it.
 
 ## API Reference
 
@@ -202,7 +201,6 @@ pub = publisher_type(name, topic, broker)
 | Method | Signature | Description |
 |---|---|---|
 | `publish` | `call pub%publish(message)` | Publish `message` through the broker to all subscribers of this publisher's topic. |
-| `disconnect` | `call pub%disconnect()` | Detach the publisher from its broker. Subsequent `publish` calls become no-ops until reconnected via reconstruction. |
 | `get_name` | `name = pub%get_name()` | Returns the publisher's name (pure). |
 | `get_topic` | `topic = pub%get_topic()` | Returns the publisher's topic (pure). |
 
