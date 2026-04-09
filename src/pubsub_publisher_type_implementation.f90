@@ -2,88 +2,28 @@ submodule (pubsub_publisher_type) pubsub_publisher_type_implementation
     !! Implementation of the publisher_type procedures.
     implicit none
 
-    integer, parameter :: INITIAL_CAPACITY = 4
-
 contains
 
-    module function new_publisher(name) result(pub)
+    module function new_publisher(name, topic, broker) result(pub)
         character(len=*), intent(in) :: name
+        character(len=*), intent(in) :: topic
+        type(broker_type), target, intent(inout) :: broker
         type(publisher_type) :: pub
 
         pub%name = name
-        pub%num_subscribers = 0
-        allocate(pub%subscribers(INITIAL_CAPACITY))
+        pub%topic = topic
+        pub%broker => broker
     end function new_publisher
 
 
-    module subroutine subscribe(self, sub)
-        class(publisher_type), intent(inout) :: self
-        class(subscriber_type), target, intent(inout) :: sub
-
-        type(subscriber_ptr), allocatable :: tmp(:)
-        integer :: i
-
-        ! Check if already subscribed
-        do i = 1, self%num_subscribers
-            if (associated(self%subscribers(i)%ptr, sub)) return
-        end do
-
-        ! Ensure capacity
-        if (.not. allocated(self%subscribers)) then
-            allocate(self%subscribers(INITIAL_CAPACITY))
-        else if (self%num_subscribers >= size(self%subscribers)) then
-            allocate(tmp(size(self%subscribers) * 2))
-            do i = 1, self%num_subscribers
-                tmp(i)%ptr => self%subscribers(i)%ptr
-            end do
-            call move_alloc(tmp, self%subscribers)
-        end if
-
-        self%num_subscribers = self%num_subscribers + 1
-        self%subscribers(self%num_subscribers)%ptr => sub
-    end subroutine subscribe
-
-
-    module subroutine unsubscribe(self, sub)
-        class(publisher_type), intent(inout) :: self
-        class(subscriber_type), target, intent(inout) :: sub
-
-        integer :: i, j
-
-        do i = 1, self%num_subscribers
-            if (associated(self%subscribers(i)%ptr, sub)) then
-                ! Shift remaining subscribers
-                do j = i, self%num_subscribers - 1
-                    self%subscribers(j)%ptr => self%subscribers(j + 1)%ptr
-                end do
-                self%subscribers(self%num_subscribers)%ptr => null()
-                self%num_subscribers = self%num_subscribers - 1
-                return
-            end if
-        end do
-    end subroutine unsubscribe
-
-
-    module subroutine notify(self, message)
+    module subroutine publish(self, message)
         class(publisher_type), intent(inout) :: self
         character(len=*), intent(in) :: message
 
-        integer :: i
-
-        do i = 1, self%num_subscribers
-            if (associated(self%subscribers(i)%ptr)) then
-                call self%subscribers(i)%ptr%update(self%name, message)
-            end if
-        end do
-    end subroutine notify
-
-
-    pure module function get_num_subscribers(self) result(n)
-        class(publisher_type), intent(in) :: self
-        integer :: n
-
-        n = self%num_subscribers
-    end function get_num_subscribers
+        if (associated(self%broker)) then
+            call self%broker%publish(self%topic, self%name, message)
+        end if
+    end subroutine publish
 
 
     pure module function get_name(self) result(name)
@@ -92,5 +32,13 @@ contains
 
         name = self%name
     end function get_name
+
+
+    pure module function get_topic(self) result(topic)
+        class(publisher_type), intent(in) :: self
+        character(len=:), allocatable :: topic
+
+        topic = self%topic
+    end function get_topic
 
 end submodule pubsub_publisher_type_implementation
