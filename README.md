@@ -20,6 +20,30 @@ Key features:
 - Dynamic subscriber list with automatic capacity growth
 - Simple, clean API
 
+## Class Diagram
+
+```mermaid
+classDiagram
+    class broker_type {
+        +subscribe(topic, sub)
+        +unsubscribe(topic, sub)
+        +publish(topic, publisher_name, message)
+        +get_num_subscribers(topic) int
+    }
+    class publisher_type {
+        +publish(message)
+        +get_name() string
+        +get_topic() string
+    }
+    class subscriber_type {
+        <<abstract>>
+        +update(publisher_name, message)*
+    }
+
+    publisher_type --> broker_type : broker pointer
+    broker_type --> subscriber_type : routes to
+```
+
 ## Requirements
 
 - A Fortran compiler supporting Fortran 2008+ submodules (e.g., GFortran 9+, Intel ifx)
