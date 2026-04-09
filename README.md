@@ -1,22 +1,24 @@
 # fortran-publisher-subscriber
 
-A lightweight **Publisher-Subscriber (Pub/Sub) pattern** implementation in modern Fortran, built with [fpm](https://fpm.fortran-lang.org/).
+A lightweight **Publisher-Broker-Subscriber** pattern implementation in modern Fortran, built with [fpm](https://fpm.fortran-lang.org/).
 
 ## Overview
 
-This library provides two core types for event-driven communication:
+This library provides three core types for event-driven communication:
 
 | Type | Description |
 |---|---|
-| `publisher_type` | Maintains a list of subscribers and broadcasts messages to them. |
+| `broker_type` | Central message broker that manages topic-based subscriptions and routes messages from publishers to subscribers. |
+| `publisher_type` | Sends messages to a broker, which routes them to the appropriate subscribers. |
 | `subscriber_type` | Abstract base type. Extend it and implement the `update` callback to react to notifications. |
 
 Key features:
 
-- Simple, clean API: `subscribe`, `unsubscribe`, `notify`
+- Topic-based message routing via a central broker
+- Publishers and subscribers are fully decoupled (no direct references)
 - Duplicate subscription prevention
 - Dynamic subscriber list with automatic capacity growth
-- Fully decoupled publishers and subscribers
+- Simple, clean API
 
 ## Requirements
 
@@ -46,10 +48,10 @@ fpm build
 
 ### 1. Import the module
 
-The library exposes a single entry-point module `pubsub` that re-exports both public types:
+The library exposes a single entry-point module `pubsub` that re-exports all public types:
 
 ```fortran
-use pubsub, only: publisher_type, subscriber_type
+use pubsub, only: broker_type, publisher_type, subscriber_type
 ```
 
 ### 2. Define a concrete subscriber
@@ -81,14 +83,15 @@ contains
 end module my_subscriber_m
 ```
 
-### 3. Create a publisher and manage subscriptions
+### 3. Create a broker, publisher, and manage subscriptions
 
 ```fortran
 program main
-    use pubsub, only: publisher_type
+    use pubsub, only: broker_type, publisher_type
     use my_subscriber_m, only: my_subscriber
     implicit none
 
+    type(broker_type), target :: broker
     type(publisher_type) :: news
     type(my_subscriber), target :: sub1, sub2
 
@@ -96,37 +99,58 @@ program main
     sub1%name = "Sub-1"
     sub2%name = "Sub-2"
 
-    ! Create a publisher with a name
-    news = publisher_type("News Agency")
+    ! Create a broker
+    broker = broker_type()
 
-    ! Subscribe
-    call news%subscribe(sub1)
-    call news%subscribe(sub2)
-    print '(a,i0)', "Subscribers: ", news%get_num_subscribers()
+    ! Create a publisher linked to the broker with a topic
+    news = publisher_type("News Agency", "news", broker)
+
+    ! Subscribe to the "news" topic via the broker
+    call broker%subscribe("news", sub1)
+    call broker%subscribe("news", sub2)
+    print '(a,i0)', "Subscribers: ", broker%get_num_subscribers("news")
     ! Output: Subscribers: 2
 
-    ! Notify all subscribers
-    call news%notify("Breaking news!")
+    ! Publish a message (routed through the broker)
+    call news%publish("Breaking news!")
     ! Output:
     !   [Sub-1] Received from 'News Agency': Breaking news!
     !   [Sub-2] Received from 'News Agency': Breaking news!
 
-    ! Unsubscribe
-    call news%unsubscribe(sub1)
-    print '(a,i0)', "Subscribers: ", news%get_num_subscribers()
+    ! Unsubscribe via the broker
+    call broker%unsubscribe("news", sub1)
+    print '(a,i0)', "Subscribers: ", broker%get_num_subscribers("news")
     ! Output: Subscribers: 1
 
     ! Only remaining subscribers are notified
-    call news%notify("More news!")
+    call news%publish("More news!")
     ! Output:
     !   [Sub-2] Received from 'News Agency': More news!
 
 end program main
 ```
 
-> **Note:** Subscriber variables passed to `subscribe` and `unsubscribe` must have the `target` attribute, since the publisher stores pointers to them internally.
+> **Note:** Subscriber variables passed to `broker%subscribe` and `broker%unsubscribe` must have the `target` attribute, since the broker stores pointers to them internally. The broker variable must also have the `target` attribute, as the publisher stores a pointer to it.
 
 ## API Reference
+
+### `broker_type`
+
+#### Constructor
+
+```fortran
+type(broker_type), target :: broker
+broker = broker_type()
+```
+
+#### Methods
+
+| Method | Signature | Description |
+|---|---|---|
+| `subscribe` | `call broker%subscribe(topic, sub)` | Subscribe `sub` to `topic`. Duplicates are silently ignored. The topic is created automatically if it does not exist. |
+| `unsubscribe` | `call broker%unsubscribe(topic, sub)` | Unsubscribe `sub` from `topic`. No-op if not subscribed. |
+| `publish` | `call broker%publish(topic, publisher_name, message)` | Send `message` to all subscribers of `topic` via their `update` callback. |
+| `get_num_subscribers` | `n = broker%get_num_subscribers(topic)` | Returns the number of subscribers for `topic` (pure). Returns 0 if the topic does not exist. |
 
 ### `publisher_type`
 
@@ -134,22 +158,22 @@ end program main
 
 ```fortran
 type(publisher_type) :: pub
-pub = publisher_type(name)
+pub = publisher_type(name, topic, broker)
 ```
 
 | Argument | Type | Intent | Description |
 |---|---|---|---|
 | `name` | `character(len=*)` | `in` | Name identifying this publisher. |
+| `topic` | `character(len=*)` | `in` | Topic this publisher sends messages to. |
+| `broker` | `type(broker_type), target` | `inout` | The broker to route messages through. |
 
 #### Methods
 
 | Method | Signature | Description |
 |---|---|---|
-| `subscribe` | `call pub%subscribe(sub)` | Add a subscriber. Duplicates are silently ignored. |
-| `unsubscribe` | `call pub%unsubscribe(sub)` | Remove a subscriber. No-op if not subscribed. |
-| `notify` | `call pub%notify(message)` | Send `message` to all current subscribers via their `update` callback. |
-| `get_num_subscribers` | `n = pub%get_num_subscribers()` | Returns the current number of subscribers (pure). |
+| `publish` | `call pub%publish(message)` | Publish `message` through the broker to all subscribers of this publisher's topic. |
 | `get_name` | `name = pub%get_name()` | Returns the publisher's name (pure). |
+| `get_topic` | `topic = pub%get_topic()` | Returns the publisher's topic (pure). |
 
 ### `subscriber_type` (abstract)
 
