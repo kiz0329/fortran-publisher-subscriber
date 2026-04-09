@@ -18,6 +18,7 @@ Key features:
 - Publishers and subscribers are fully decoupled (no direct references)
 - Duplicate subscription prevention
 - Dynamic subscriber list with automatic capacity growth
+- Explicit cleanup APIs: `broker%clear()` and `pub%disconnect()`
 - Simple, clean API
 
 ## Class Diagram
@@ -155,6 +156,8 @@ end program main
 ```
 
 > **Note:** Subscriber variables passed to `broker%subscribe` and `broker%unsubscribe` must have the `target` attribute, since the broker stores pointers to them internally. The broker variable must also have the `target` attribute, as the publisher stores a pointer to it.
+>
+> **Lifecycle requirement:** Subscribers must remain alive while registered in a broker, and a broker must remain alive while connected publishers still reference it. For explicit teardown, call `broker%clear()` before destroying a broker and `pub%disconnect()` before destroying or reusing a publisher.
 
 ## API Reference
 
@@ -174,6 +177,7 @@ broker = broker_type()
 | `subscribe` | `call broker%subscribe(topic, sub)` | Subscribe `sub` to `topic`. Duplicates are silently ignored. The topic is created automatically if it does not exist. |
 | `unsubscribe` | `call broker%unsubscribe(topic, sub)` | Unsubscribe `sub` from `topic`. No-op if not subscribed. |
 | `publish` | `call broker%publish(topic, publisher_name, message)` | Send `message` to all subscribers of `topic` via their `update` callback. |
+| `clear` | `call broker%clear()` | Detach all registered subscribers and remove all topics from the broker. |
 | `get_num_subscribers` | `n = broker%get_num_subscribers(topic)` | Returns the number of subscribers for `topic` (pure). Returns 0 if the topic does not exist. |
 
 ### `publisher_type`
@@ -196,6 +200,7 @@ pub = publisher_type(name, topic, broker)
 | Method | Signature | Description |
 |---|---|---|
 | `publish` | `call pub%publish(message)` | Publish `message` through the broker to all subscribers of this publisher's topic. |
+| `disconnect` | `call pub%disconnect()` | Detach the publisher from its broker. Subsequent `publish` calls become no-ops until reconnected via reconstruction. |
 | `get_name` | `name = pub%get_name()` | Returns the publisher's name (pure). |
 | `get_topic` | `topic = pub%get_topic()` | Returns the publisher's topic (pure). |
 

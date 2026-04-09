@@ -32,7 +32,9 @@ module pubsub_broker_type
         procedure :: subscribe
         procedure :: unsubscribe
         procedure :: publish
+        procedure :: clear
         procedure :: get_num_subscribers
+        final :: finalize_broker
     end type broker_type
 
     interface broker_type
@@ -66,12 +68,22 @@ module pubsub_broker_type
             character(len=*), intent(in) :: message
         end subroutine publish
 
+        module subroutine clear(self)
+            !! Remove all topics and detach all subscriber pointers.
+            class(broker_type), intent(inout) :: self
+        end subroutine clear
+
         pure module function get_num_subscribers(self, topic_name) result(n)
             !! Returns the number of subscribers for a topic.
             class(broker_type), intent(in) :: self
             character(len=*), intent(in) :: topic_name
             integer :: n
         end function get_num_subscribers
+
+        module subroutine finalize_broker(self)
+            !! Finalizer that detaches all internal pointers.
+            type(broker_type), intent(inout) :: self
+        end subroutine finalize_broker
 
     end interface
 

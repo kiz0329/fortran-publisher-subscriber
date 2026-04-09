@@ -28,7 +28,9 @@ contains
             new_unittest("duplicate-subscribe", test_duplicate_subscribe), &
             new_unittest("notify-after-unsubscribe", test_notify_after_unsubscribe), &
             new_unittest("multiple-topics", test_multiple_topics), &
-            new_unittest("publisher-publish", test_publisher_publish) &
+            new_unittest("publisher-publish", test_publisher_publish), &
+            new_unittest("broker-clear", test_broker_clear), &
+            new_unittest("publisher-disconnect", test_publisher_disconnect) &
         ]
     end subroutine collect_pubsub
 
@@ -239,6 +241,46 @@ contains
         call check(error, trim(sub%last_message) == "hello", &
             "Message should be forwarded")
     end subroutine test_publisher_publish
+
+
+    subroutine test_broker_clear(error)
+        !> Error handling
+        type(error_type), allocatable, intent(out) :: error
+
+        type(broker_type), target :: broker
+        type(test_subscriber), target :: sub1, sub2
+
+        broker = broker_type()
+        call broker%subscribe("topic-a", sub1)
+        call broker%subscribe("topic-b", sub2)
+        call broker%clear()
+
+        call check(error, broker%get_num_subscribers("topic-a") == 0, &
+            "Cleared broker should have no subscribers on topic-a")
+        if (allocated(error)) return
+        call check(error, broker%get_num_subscribers("topic-b") == 0, &
+            "Cleared broker should have no subscribers on topic-b")
+    end subroutine test_broker_clear
+
+
+    subroutine test_publisher_disconnect(error)
+        !> Error handling
+        type(error_type), allocatable, intent(out) :: error
+
+        type(broker_type), target :: broker
+        type(publisher_type) :: pub
+        type(test_subscriber), target :: sub
+
+        broker = broker_type()
+        pub = publisher_type("test-pub", "test-topic", broker)
+        call broker%subscribe("test-topic", sub)
+        call pub%disconnect()
+
+        call pub%publish("hello")
+
+        call check(error, sub%update_count == 0, &
+            "Disconnected publisher should not publish messages")
+    end subroutine test_publisher_disconnect
 
 end module test_pubsub
 

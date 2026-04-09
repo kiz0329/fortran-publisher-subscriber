@@ -7,6 +7,19 @@ submodule (pubsub_broker_type) pubsub_broker_type_implementation
 
 contains
 
+    pure subroutine clear_subscriber_array(subscribers, num_subscribers)
+        type(subscriber_ptr), allocatable, intent(inout) :: subscribers(:)
+        integer, intent(in) :: num_subscribers
+
+        integer :: i
+
+        if (.not. allocated(subscribers)) return
+
+        do i = 1, min(num_subscribers, size(subscribers))
+            nullify(subscribers(i)%ptr)
+        end do
+    end subroutine clear_subscriber_array
+
     module function new_broker() result(broker)
         type(broker_type) :: broker
 
@@ -135,6 +148,22 @@ contains
     end subroutine publish
 
 
+    module subroutine clear(self)
+        class(broker_type), intent(inout) :: self
+
+        integer :: i
+
+        if (allocated(self%topics)) then
+            do i = 1, self%num_topics
+                call clear_subscriber_array(self%topics(i)%subscribers, self%topics(i)%num_subscribers)
+            end do
+            deallocate(self%topics)
+        end if
+
+        self%num_topics = 0
+    end subroutine clear
+
+
     pure module function get_num_subscribers(self, topic_name) result(n)
         class(broker_type), intent(in) :: self
         character(len=*), intent(in) :: topic_name
@@ -149,5 +178,12 @@ contains
             n = self%topics(tidx)%num_subscribers
         end if
     end function get_num_subscribers
+
+
+    module subroutine finalize_broker(self)
+        type(broker_type), intent(inout) :: self
+
+        call self%clear()
+    end subroutine finalize_broker
 
 end submodule pubsub_broker_type_implementation

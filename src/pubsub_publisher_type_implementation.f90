@@ -26,6 +26,13 @@ contains
     end subroutine publish
 
 
+    module subroutine disconnect(self)
+        class(publisher_type), intent(inout) :: self
+
+        nullify(self%broker)
+    end subroutine disconnect
+
+
     pure module function get_name(self) result(name)
         class(publisher_type), intent(in) :: self
         character(len=:), allocatable :: name
@@ -40,5 +47,12 @@ contains
 
         topic = self%topic
     end function get_topic
+
+
+    module subroutine finalize_publisher(self)
+        type(publisher_type), intent(inout) :: self
+
+        call self%disconnect()
+    end subroutine finalize_publisher
 
 end submodule pubsub_publisher_type_implementation

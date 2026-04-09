@@ -18,8 +18,10 @@ module pubsub_publisher_type
         type(broker_type), pointer :: broker => null()
     contains
         procedure :: publish
+        procedure :: disconnect
         procedure :: get_name
         procedure :: get_topic
+        final :: finalize_publisher
     end type publisher_type
 
     interface publisher_type
@@ -40,6 +42,11 @@ module pubsub_publisher_type
             character(len=*), intent(in) :: message
         end subroutine publish
 
+        module subroutine disconnect(self)
+            !! Detach this publisher from its broker.
+            class(publisher_type), intent(inout) :: self
+        end subroutine disconnect
+
         pure module function get_name(self) result(name)
             !! Returns the name of the publisher.
             class(publisher_type), intent(in) :: self
@@ -51,6 +58,11 @@ module pubsub_publisher_type
             class(publisher_type), intent(in) :: self
             character(len=:), allocatable :: topic
         end function get_topic
+
+        module subroutine finalize_publisher(self)
+            !! Finalizer that detaches the broker pointer.
+            type(publisher_type), intent(inout) :: self
+        end subroutine finalize_publisher
 
     end interface
 

@@ -1,5 +1,6 @@
 {
   "chat.tools.terminal.autoApprove": {
-    "fpm": true
+    "fpm": true,
+    "printf": true
   }
 }
