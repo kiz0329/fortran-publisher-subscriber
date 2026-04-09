@@ -29,10 +29,12 @@ classDiagram
         +subscribe(topic, sub)
         +unsubscribe(topic, sub)
         +publish(topic, publisher_name, message)
+        +clear()
         +get_num_subscribers(topic) int
     }
     class publisher_type {
         +publish(message)
+        +disconnect()
         +get_name() string
         +get_topic() string
     }
