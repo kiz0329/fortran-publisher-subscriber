@@ -212,7 +212,7 @@ Extend this type and implement the deferred procedure:
 subroutine update(self, publisher_name, message)
     class(my_subscriber), intent(inout) :: self
     character(len=*), intent(in) :: publisher_name  ! name of the notifying publisher
-    character(len=*), intent(in) :: message          ! the notification payload
+    character(len=*), intent(in) :: message         ! the notification payload
 end subroutine
 ```
 
