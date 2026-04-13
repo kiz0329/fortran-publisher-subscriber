@@ -94,7 +94,7 @@ contains
 
         broker = broker_type()
         call broker%subscribe("test-topic", sub)
-        call broker%publish("test-topic", "test-publisher", "hello")
+        call broker%publish("test-publisher", "test-topic", "hello")
 
         call check(error, sub%update_count == 1, &
             "Subscriber should have been notified once")
@@ -142,7 +142,7 @@ contains
             "Subscriber count should be 3")
         if (allocated(error)) return
 
-        call broker%publish("test-topic", "test-publisher", "broadcast")
+        call broker%publish("test-publisher", "test-topic", "broadcast")
 
         call check(error, sub1%update_count == 1, &
             "Subscriber 1 should have been notified")
@@ -183,7 +183,7 @@ contains
         call broker%subscribe("test-topic", sub2)
         call broker%unsubscribe("test-topic", sub1)
 
-        call broker%publish("test-topic", "test-publisher", "hello")
+        call broker%publish("test-publisher", "test-topic", "hello")
 
         call check(error, sub1%update_count == 0, &
             "Unsubscribed subscriber should not be notified")
@@ -204,7 +204,7 @@ contains
         call broker%subscribe("topic-a", sub1)
         call broker%subscribe("topic-b", sub2)
 
-        call broker%publish("topic-a", "pub-a", "message-a")
+        call broker%publish("pub-a", "topic-a", "message-a")
 
         call check(error, sub1%update_count == 1, &
             "Subscriber on topic-a should be notified")

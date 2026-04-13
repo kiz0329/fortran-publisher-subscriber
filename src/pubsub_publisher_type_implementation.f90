@@ -20,7 +20,7 @@ contains
         character(len=*), intent(in) :: message
 
         if (associated(self%broker)) then
-            call self%broker%publish(topic, self%name, message)
+            call self%broker%publish(self%name, topic, message)
         end if
     end subroutine publish
 

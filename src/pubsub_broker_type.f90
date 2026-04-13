@@ -46,25 +46,25 @@ module pubsub_broker_type
 
     interface
 
-        module subroutine subscribe(self, topic_name, sub)
+        module subroutine subscribe(self, topic, sub)
             !! Subscribe a subscriber to a topic.
             class(broker_type), intent(inout) :: self
-            character(len=*), intent(in) :: topic_name
+            character(len=*), intent(in) :: topic
             class(subscriber_type), target, intent(inout) :: sub
         end subroutine subscribe
 
-        module subroutine unsubscribe(self, topic_name, sub)
+        module subroutine unsubscribe(self, topic, sub)
             !! Unsubscribe a subscriber from a topic.
             class(broker_type), intent(inout) :: self
-            character(len=*), intent(in) :: topic_name
+            character(len=*), intent(in) :: topic
             class(subscriber_type), target, intent(inout) :: sub
         end subroutine unsubscribe
 
-        module subroutine publish(self, topic_name, publisher_name, message)
+        module subroutine publish(self, publisher_name, topic, message)
             !! Publish a message to all subscribers of a topic.
             class(broker_type), intent(inout) :: self
-            character(len=*), intent(in) :: topic_name
             character(len=*), intent(in) :: publisher_name
+            character(len=*), intent(in) :: topic
             character(len=*), intent(in) :: message
         end subroutine publish
 
@@ -73,10 +73,10 @@ module pubsub_broker_type
             class(broker_type), intent(inout) :: self
         end subroutine clear
 
-        pure module function get_num_subscribers(self, topic_name) result(n)
+        pure module function get_num_subscribers(self, topic) result(n)
             !! Returns the number of subscribers for a topic.
             class(broker_type), intent(in) :: self
-            character(len=*), intent(in) :: topic_name
+            character(len=*), intent(in) :: topic
             integer :: n
         end function get_num_subscribers
 

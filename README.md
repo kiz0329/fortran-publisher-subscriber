@@ -28,7 +28,7 @@ classDiagram
     class broker_type {
         +subscribe(topic, sub)
         +unsubscribe(topic, sub)
-        +publish(topic, publisher_name, message)
+        +publish(publisher_name, topic, message)
         +clear()
         +get_num_subscribers(topic) int
     }
@@ -176,7 +176,7 @@ broker = broker_type()
 |---|---|---|
 | `subscribe` | `call broker%subscribe(topic, sub)` | Subscribe `sub` to `topic`. Duplicates are silently ignored. The topic is created automatically if it does not exist. |
 | `unsubscribe` | `call broker%unsubscribe(topic, sub)` | Unsubscribe `sub` from `topic`. No-op if not subscribed. |
-| `publish` | `call broker%publish(topic, publisher_name, message)` | Send `message` to all subscribers of `topic` via their `update` callback. |
+| `publish` | `call broker%publish(publisher_name, topic, message)` | Send `message` to all subscribers of `topic` via their `update` callback. |
 | `clear` | `call broker%clear()` | Detach all registered subscribers and remove all topics from the broker. |
 | `get_num_subscribers` | `n = broker%get_num_subscribers(topic)` | Returns the number of subscribers for `topic` (pure). Returns 0 if the topic does not exist. |
 

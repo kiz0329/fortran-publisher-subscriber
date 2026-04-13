@@ -28,17 +28,17 @@ contains
     end function new_broker
 
 
-    pure function find_topic(self, topic_name) result(idx)
+    pure function find_topic(self, topic) result(idx)
         !! Find topic index by name. Returns 0 if not found.
         type(broker_type), intent(in) :: self
-        character(len=*), intent(in) :: topic_name
+        character(len=*), intent(in) :: topic
         integer :: idx
 
         integer :: i
 
         idx = 0
         do i = 1, self%num_topics
-            if (self%topics(i)%name == topic_name) then
+            if (self%topics(i)%name == topic) then
                 idx = i
                 return
             end if
@@ -46,16 +46,16 @@ contains
     end function find_topic
 
 
-    function ensure_topic(self, topic_name) result(idx)
+    function ensure_topic(self, topic) result(idx)
         !! Find or create a topic, returning its index.
         type(broker_type), intent(inout) :: self
-        character(len=*), intent(in) :: topic_name
+        character(len=*), intent(in) :: topic
         integer :: idx
 
         integer :: i
         type(topic_entry), allocatable :: tmp(:)
 
-        idx = find_topic(self, topic_name)
+        idx = find_topic(self, topic)
         if (idx > 0) return
 
         ! Grow topics array if needed
@@ -71,21 +71,21 @@ contains
 
         self%num_topics = self%num_topics + 1
         idx = self%num_topics
-        self%topics(idx)%name = topic_name
+        self%topics(idx)%name = topic
         self%topics(idx)%num_subscribers = 0
         allocate(self%topics(idx)%subscribers(INITIAL_SUB_CAPACITY))
     end function ensure_topic
 
 
-    module subroutine subscribe(self, topic_name, sub)
+    module subroutine subscribe(self, topic, sub)
         class(broker_type), intent(inout) :: self
-        character(len=*), intent(in) :: topic_name
+        character(len=*), intent(in) :: topic
         class(subscriber_type), target, intent(inout) :: sub
 
         type(subscriber_ptr), allocatable :: tmp(:)
         integer :: tidx, i
 
-        tidx = ensure_topic(self, topic_name)
+        tidx = ensure_topic(self, topic)
 
         ! Check if already subscribed
         do i = 1, self%topics(tidx)%num_subscribers
@@ -106,14 +106,14 @@ contains
     end subroutine subscribe
 
 
-    module subroutine unsubscribe(self, topic_name, sub)
+    module subroutine unsubscribe(self, topic, sub)
         class(broker_type), intent(inout) :: self
-        character(len=*), intent(in) :: topic_name
+        character(len=*), intent(in) :: topic
         class(subscriber_type), target, intent(inout) :: sub
 
         integer :: tidx, i, j
 
-        tidx = find_topic(self, topic_name)
+        tidx = find_topic(self, topic)
         if (tidx == 0) return
 
         do i = 1, self%topics(tidx)%num_subscribers
@@ -129,15 +129,15 @@ contains
     end subroutine unsubscribe
 
 
-    module subroutine publish(self, topic_name, publisher_name, message)
+    module subroutine publish(self, publisher_name, topic, message)
         class(broker_type), intent(inout) :: self
-        character(len=*), intent(in) :: topic_name
         character(len=*), intent(in) :: publisher_name
+        character(len=*), intent(in) :: topic
         character(len=*), intent(in) :: message
 
         integer :: tidx, i
 
-        tidx = find_topic(self, topic_name)
+        tidx = find_topic(self, topic)
         if (tidx == 0) return
 
         do i = 1, self%topics(tidx)%num_subscribers
@@ -164,14 +164,14 @@ contains
     end subroutine clear
 
 
-    pure module function get_num_subscribers(self, topic_name) result(n)
+    pure module function get_num_subscribers(self, topic) result(n)
         class(broker_type), intent(in) :: self
-        character(len=*), intent(in) :: topic_name
+        character(len=*), intent(in) :: topic
         integer :: n
 
         integer :: tidx
 
-        tidx = find_topic(self, topic_name)
+        tidx = find_topic(self, topic)
         if (tidx == 0) then
             n = 0
         else
