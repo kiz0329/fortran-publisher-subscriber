@@ -14,20 +14,17 @@ module pubsub_publisher_type
         !! Type implementing a publisher in the publisher-broker-subscriber pattern.
         private
         character(len=:), allocatable :: name
-        character(len=:), allocatable :: topic
         type(broker_type), pointer :: broker => null()
     contains
         procedure :: publish
         procedure :: get_name
-        procedure :: get_topic
         final :: finalize_publisher
     end type publisher_type
 
     interface publisher_type
         !! Constructor for publisher_type.
-        module function new_publisher(name, topic, broker) result(pub)
+        module function new_publisher(name, broker) result(pub)
             character(len=*), intent(in) :: name
-            character(len=*), intent(in) :: topic
             type(broker_type), target, intent(inout) :: broker
             type(publisher_type) :: pub
         end function new_publisher
@@ -35,9 +32,10 @@ module pubsub_publisher_type
 
     interface
 
-        module subroutine publish(self, message)
+        module subroutine publish(self, topic, message)
             !! Publish a message through the broker.
             class(publisher_type), intent(inout) :: self
+            character(len=*), intent(in) :: topic
             character(len=*), intent(in) :: message
         end subroutine publish
 
@@ -46,12 +44,6 @@ module pubsub_publisher_type
             class(publisher_type), intent(in) :: self
             character(len=:), allocatable :: name
         end function get_name
-
-        pure module function get_topic(self) result(topic)
-            !! Returns the topic of the publisher.
-            class(publisher_type), intent(in) :: self
-            character(len=:), allocatable :: topic
-        end function get_topic
 
         module subroutine finalize_publisher(self)
             !! Finalizer that detaches the broker pointer.

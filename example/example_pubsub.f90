@@ -39,7 +39,7 @@ program example_pubsub
     broker = broker_type()
 
     ! Create a publisher linked to the broker
-    news = publisher_type("News Agency", "news", broker)
+    news = publisher_type("News Agency", broker)
 
     ! Subscribe both loggers to the "news" topic via the broker
     call broker%subscribe("news", logger1)
@@ -48,7 +48,7 @@ program example_pubsub
     ! Subscribers: 2
 
     ! Publish a message (routed through the broker)
-    call news%publish("Breaking news!")
+    call news%publish("news", "Breaking news!")
     ! [Logger-1] Received from 'News Agency': Breaking news!
     ! [Logger-2] Received from 'News Agency': Breaking news!
 
@@ -58,7 +58,7 @@ program example_pubsub
     ! Subscribers after unsubscribe: 1
 
     ! Publish another message
-    call news%publish("More news!")
+    call news%publish("news", "More news!")
     ! [Logger-2] Received from 'News Agency': More news!
 
 end program example_pubsub

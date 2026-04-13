@@ -65,12 +65,9 @@ contains
         type(publisher_type) :: pub
 
         broker = broker_type()
-        pub = publisher_type("test-publisher", "test-topic", broker)
+        pub = publisher_type("test-publisher", broker)
         call check(error, pub%get_name() == "test-publisher", &
             "Publisher name should match")
-        if (allocated(error)) return
-        call check(error, pub%get_topic() == "test-topic", &
-            "Publisher topic should match")
     end subroutine test_publisher_creation
 
 
@@ -226,10 +223,10 @@ contains
         type(test_subscriber), target :: sub
 
         broker = broker_type()
-        pub = publisher_type("test-pub", "test-topic", broker)
+        pub = publisher_type("test-pub", broker)
         call broker%subscribe("test-topic", sub)
 
-        call pub%publish("hello")
+        call pub%publish("test-topic", "hello")
 
         call check(error, sub%update_count == 1, &
             "Subscriber should be notified via publisher")

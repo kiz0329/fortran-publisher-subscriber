@@ -33,9 +33,8 @@ classDiagram
         +get_num_subscribers(topic) int
     }
     class publisher_type {
-        +publish(message)
+        +publish(topic, message)
         +get_name() string
-        +get_topic() string
     }
     class subscriber_type {
         <<abstract>>
@@ -128,8 +127,8 @@ program main
     ! Create a broker
     broker = broker_type()
 
-    ! Create a publisher linked to the broker with a topic
-    news = publisher_type("News Agency", "news", broker)
+    ! Create a publisher linked to the broker
+    news = publisher_type("News Agency", broker)
 
     ! Subscribe to the "news" topic via the broker
     call broker%subscribe("news", sub1)
@@ -138,7 +137,7 @@ program main
     ! Output: Subscribers: 2
 
     ! Publish a message (routed through the broker)
-    call news%publish("Breaking news!")
+    call news%publish("news", "Breaking news!")
     ! Output:
     !   [Sub-1] Received from 'News Agency': Breaking news!
     !   [Sub-2] Received from 'News Agency': Breaking news!
@@ -149,7 +148,7 @@ program main
     ! Output: Subscribers: 1
 
     ! Only remaining subscribers are notified
-    call news%publish("More news!")
+    call news%publish("news", "More news!")
     ! Output:
     !   [Sub-2] Received from 'News Agency': More news!
 
@@ -187,22 +186,20 @@ broker = broker_type()
 
 ```fortran
 type(publisher_type) :: pub
-pub = publisher_type(name, topic, broker)
+pub = publisher_type(name, broker)
 ```
 
 | Argument | Type | Intent | Description |
 |---|---|---|---|
 | `name` | `character(len=*)` | `in` | Name identifying this publisher. |
-| `topic` | `character(len=*)` | `in` | Topic this publisher sends messages to. |
 | `broker` | `type(broker_type), target` | `inout` | The broker to route messages through. |
 
 #### Methods
 
 | Method | Signature | Description |
 |---|---|---|
-| `publish` | `call pub%publish(message)` | Publish `message` through the broker to all subscribers of this publisher's topic. |
+| `publish` | `call pub%publish(topic, message)` | Publish `message` to `topic` through the broker. |
 | `get_name` | `name = pub%get_name()` | Returns the publisher's name (pure). |
-| `get_topic` | `topic = pub%get_topic()` | Returns the publisher's topic (pure). |
 
 ### `subscriber_type` (abstract)
 
